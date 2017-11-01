@@ -2,28 +2,28 @@
 
 namespace Phayes\GeoPHP\Adapters;
 
-use Phayes\GeoPHP\GeoPHP;
-use Phayes\GeoPHP\Adapters\GeoAdapter;
-use Phayes\GeoPHP\Geometry\Point;
-use Phayes\GeoPHP\Geometry\Polygon;
-use Phayes\GeoPHP\Geometry\LineString;
-use Phayes\GeoPHP\Geometry\MultiPoint;
-use Phayes\GeoPHP\Geometry\MultiPolygon;
-use Phayes\GeoPHP\Geometry\MultiLineString;
+use Exception;
 use Phayes\GeoPHP\Geometry\Geometry;
 use Phayes\GeoPHP\Geometry\GeometryCollection;
-use Exception;
+use Phayes\GeoPHP\Geometry\LineString;
+use Phayes\GeoPHP\Geometry\Point;
+use Phayes\GeoPHP\Geometry\Polygon;
+use Phayes\GeoPHP\GeoPHP;
 
 class KML extends GeoAdapter
 {
+  /** @var bool  */
   private $namespace = false;
-  private $nss = ''; // Name-space string. eg 'georss:'
+
+  /**
+   * Namespace string. eg 'georss:'
+   * @var string
+   */
+  private $nss = null;
 
   /**
    * Read KML string into geometry objects
-   *
    * @param string $kml A KML string
-   *
    * @return Geometry|GeometryCollection
    */
   public function read($kml)
@@ -38,11 +38,11 @@ class KML extends GeoAdapter
    *
    * @return string The KML string representation of the input geometries
    */
-  public function write(Geometry $geometry, $namespace = false)
+  public function write(Geometry $geometry, $hasNamespace = false)
   {
-    if ($namespace) {
-      $this->namespace = $namespace;
-      $this->nss = $namespace.':';
+    if ($hasNamespace) {
+      $this->namespace = $hasNamespace;
+      $this->nss = $hasNamespace.':';
     }
 
     return $this->geometryToKML($geometry);
@@ -55,7 +55,7 @@ class KML extends GeoAdapter
     $text = preg_replace('/<!\[cdata\[(.*?)\]\]>/s','',$text);
 
     // Load into DOMDocument
-    $xmlobj = new DOMDocument();
+    $xmlobj = new \DOMDocument();
     @$xmlobj->loadXML($text);
     if ($xmlobj === false) {
       throw new Exception("Invalid KML: ". $text);
@@ -63,12 +63,11 @@ class KML extends GeoAdapter
     $this->xmlobj = $xmlobj;
     try {
       $geom = $this->geomFromXML();
-    } catch(InvalidText $e) {
-        throw new Exception("Cannot Read Geometry From KML: ". $text);
+//    } catch(InvalidText $e) {
+//        throw new Exception("Cannot Read Geometry From KML: ". $text);
     } catch(Exception $e) {
         throw $e;
     }
-
     return $geom;
   }
 
@@ -97,7 +96,6 @@ class KML extends GeoAdapter
         $geometries[] = $this->$function($this->xmlobj->documentElement);
       }
     }
-
     return GeoPHP::geometryReduce($geometries);
   }
 
@@ -111,7 +109,6 @@ class KML extends GeoAdapter
         }
       }
     }
-
     return $children;
   }
 
@@ -121,9 +118,7 @@ class KML extends GeoAdapter
     if (!empty($coordinates)) {
       return new Point($coordinates[0][0],$coordinates[0][1]);
     }
-    else {
-      return new Point();
-    }
+    return new Point();
   }
 
   protected function parseLineString($xml)
@@ -133,7 +128,6 @@ class KML extends GeoAdapter
     foreach ($coordinates as $set) {
       $point_array[] = new Point($set[0],$set[1]);
     }
-
     return new LineString($point_array);
   }
 
@@ -141,11 +135,9 @@ class KML extends GeoAdapter
   {
     $components = [];
     $outer_boundary_element_a = $this->childElements($xml, 'outerboundaryis');
-
     if (empty($outer_boundary_element_a)) {
       return new Polygon(); // It's an empty polygon
     }
-
     $outer_boundary_element = $outer_boundary_element_a[0];
     $outer_ring_element_a = $this->childElements($outer_boundary_element, 'linearring');
     $outer_ring_element = $outer_ring_element_a[0];
@@ -161,7 +153,6 @@ class KML extends GeoAdapter
         }
       }
     }
-
     return new Polygon($components);
   }
 
@@ -169,7 +160,6 @@ class KML extends GeoAdapter
   {
     $components = [];
     $geom_types = geoPHP::geometryList();
-
     foreach ($xml->childNodes as $child) {
       $nodeName = ($child->nodeName == 'linearring') ? 'linestring' : $child->nodeName;
       if (array_key_exists($nodeName, $geom_types)) {
@@ -177,62 +167,52 @@ class KML extends GeoAdapter
         $components[] = $this->$function($child);
       }
     }
-
     return new GeometryCollection($components);
   }
 
   protected function _extractCoordinates($xml)
   {
-    $coord_elements = $this->childElements($xml, 'coordinates');
+    $coordinateElements = $this->childElements($xml, 'coordinates');
     $coordinates = [];
-
-    if (count($coord_elements)) {
-      $coord_sets = explode(' ', preg_replace('/[\r\n]+/', ' ', $coord_elements[0]->nodeValue));
-      foreach ($coord_sets as $set_string) {
-        $set_string = trim($set_string);
-        if ($set_string) {
-          $set_array = explode(',',$set_string);
+    if (count($coordinateElements)) {
+      $coordinateSets = explode(' ', preg_replace('/[\r\n]+/', ' ', $coordinateElements[0]->nodeValue));
+      foreach ($coordinateSets as $setString) {
+        $setString = trim($setString);
+        if ($setString) {
+          $set_array = explode(',',$setString);
           if (count($set_array) >= 2) {
             $coordinates[] = $set_array;
           }
         }
       }
     }
-
     return $coordinates;
   }
 
   private function geometryToKML($geom)
   {
     $type = strtolower($geom->getGeomType());
-
     switch ($type) {
       case 'point':
         return $this->pointToKML($geom);
-        break;
       case 'linestring':
         return $this->linestringToKML($geom);
-        break;
       case 'polygon':
         return $this->polygonToKML($geom);
-        break;
       case 'multipoint':
       case 'multilinestring':
       case 'multipolygon':
       case 'geometrycollection':
         return $this->collectionToKML($geom);
-        break;
     }
   }
 
   private function pointToKML($geom)
   {
     $out = '<'.$this->nss.'Point>';
-
     if (!$geom->isEmpty()) {
       $out .= '<'.$this->nss.'coordinates>'.$geom->getX().",".$geom->getY().'</'.$this->nss.'coordinates>';
     }
-
     $out .= '</'.$this->nss.'Point>';
     return $out;
   }
@@ -255,7 +235,6 @@ class KML extends GeoAdapter
       $str .= '</'.$this->nss.'coordinates>';
     }
     $str .= '</'. $this->nss . $type .'>';
-
     return $str;
   }
 
@@ -263,14 +242,12 @@ class KML extends GeoAdapter
   {
     $components = $geom->getComponents();
     $str = '';
-
     if (!empty($components)) {
       $str = '<'.$this->nss.'outerBoundaryIs>' . $this->linestringToKML($components[0], 'LinearRing') . '</'.$this->nss.'outerBoundaryIs>';
       foreach (array_slice($components, 1) as $comp) {
         $str .= '<'.$this->nss.'innerBoundaryIs>' . $this->linestringToKML($comp) . '</'.$this->nss.'innerBoundaryIs>';
       }
     }
-
     return '<'.$this->nss.'Polygon>'. $str .'</'.$this->nss.'Polygon>';
   }
 
@@ -278,12 +255,10 @@ class KML extends GeoAdapter
   {
     $components = $geom->getComponents();
     $str = '<'.$this->nss.'MultiGeometry>';
-
-    foreach ($geom->getComponents() as $comp) {
+    foreach ($components as $comp) {
       $sub_adapter = new KML();
       $str .= $sub_adapter->write($comp);
     }
-
     return $str .'</'.$this->nss.'MultiGeometry>';
   }
 }

@@ -2,6 +2,7 @@
 
 [geophp.net](https://geophp.net "GeoPHP homepage")
 
+NAMESPACED and cleaner fork of the original GeoPHP.
 
 GeoPHP is a open-source native PHP library for doing geometry operations. It is written entirely in PHP and 
 can therefore run on shared hosts. It can read and write a wide variety of formats: WKT (including EWKT), WKB (including EWKB), GeoJSON, 

@@ -2,17 +2,12 @@
 
 namespace Phayes\GeoPHP\Adapters;
 
-use Phayes\GeoPHP\GeoPHP;
-use Phayes\GeoPHP\Adapters\GeoAdapter;
-use Phayes\GeoPHP\Geometry\Point;
-use Phayes\GeoPHP\Geometry\Polygon;
-use Phayes\GeoPHP\Geometry\LineString;
-use Phayes\GeoPHP\Geometry\MultiPoint;
-use Phayes\GeoPHP\Geometry\MultiPolygon;
-use Phayes\GeoPHP\Geometry\MultiLineString;
+use Exception;
 use Phayes\GeoPHP\Geometry\Geometry;
 use Phayes\GeoPHP\Geometry\GeometryCollection;
-use Exception;
+use Phayes\GeoPHP\Geometry\LineString;
+use Phayes\GeoPHP\Geometry\Point;
+use Phayes\GeoPHP\GeoPHP;
 
 /**
  * PHP Geometry/GPX encoder/decoder
@@ -41,14 +36,14 @@ class GPX extends GeoAdapter
    *
    * @return string The GPX string representation of the input geometries
    */
-  public function write(Geometry $geometry, $namespace = false)
+  public function write(Geometry $geometry, $hasNamespace = false)
   {
     if ($geometry->isEmpty()) {
         return null;
     }
-    if ($namespace) {
-      $this->namespace = $namespace;
-      $this->nss = $namespace.':';
+    if ($hasNamespace) {
+      $this->namespace = $hasNamespace;
+      $this->nss = $hasNamespace.':';
     }
 
     return '<'.$this->nss.'gpx creator="geoPHP" version="1.0">'.$this->geometryToGPX($geometry).'</'.$this->nss.'gpx>';
@@ -61,7 +56,7 @@ class GPX extends GeoAdapter
     $text = preg_replace('/<!\[cdata\[(.*?)\]\]>/s','',$text);
 
     // Load into DOMDocument
-    $xmlobj = new DOMDocument();
+    $xmlobj = new \DOMDocument();
     @$xmlobj->loadXML($text);
     if ($xmlobj === false) {
       throw new Exception("Invalid GPX: ". $text);
@@ -70,8 +65,8 @@ class GPX extends GeoAdapter
     $this->xmlobj = $xmlobj;
     try {
       $geom = $this->geomFromXML();
-    } catch(InvalidText $e) {
-        throw new Exception("Cannot Read Geometry From GPX: ". $text);
+//    } catch(InvalidText $e) {
+//        throw new Exception("Cannot Read Geometry From GPX: ". $text);
     } catch(Exception $e) {
         throw $e;
     }
@@ -89,7 +84,6 @@ class GPX extends GeoAdapter
     if (empty($geometries)) {
       throw new Exception("Invalid / Empty GPX");
     }
-
     return geoPHP::geometryReduce($geometries);
   }
 
@@ -109,13 +103,11 @@ class GPX extends GeoAdapter
   {
     $points = [];
     $wpt_elements = $this->xmlobj->getElementsByTagName('wpt');
-
     foreach ($wpt_elements as $wpt) {
       $lat = $wpt->attributes->getNamedItem("lat")->nodeValue;
       $lon = $wpt->attributes->getNamedItem("lon")->nodeValue;
       $points[] = new Point($lon, $lat);
     }
-
     return $points;
   }
 
@@ -143,7 +135,6 @@ class GPX extends GeoAdapter
   {
     $lines = [];
     $rte_elements = $this->xmlobj->getElementsByTagName('rte');
-
     foreach ($rte_elements as $rte) {
       $components = [];
       foreach ($this->childElements($rte, 'rtept') as $rtept) {
@@ -153,29 +144,30 @@ class GPX extends GeoAdapter
       }
       $lines[] = new LineString($components);
     }
-
     return $lines;
   }
 
+  /**
+   * Geometry to gpx -
+   * @param Geometry $geom
+   * @return bool|string
+   */
   protected function geometryToGPX($geom)
   {
     $type = strtolower($geom->getGeomType());
-
     switch ($type) {
       case 'point':
         return $this->pointToGPX($geom);
-        break;
       case 'linestring':
         return $this->linestringToGPX($geom);
-        break;
       case 'polygon':
       case 'multipoint':
       case 'multilinestring':
       case 'multipolygon':
       case 'geometrycollection':
         return $this->collectionToGPX($geom);
-        break;
     }
+    return false;
   }
 
   private function pointToGPX($geom)

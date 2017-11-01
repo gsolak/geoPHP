@@ -2,8 +2,6 @@
 
 namespace Phayes\GeoPHP\Geometry;
 
-use Phayes\GeoPHP\GeoPHP;
-use Phayes\GeoPHP\Geometry\Collection;
 use Exception;
 
 class LineString extends Collection

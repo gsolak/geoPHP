@@ -2,8 +2,6 @@
 
 namespace Phayes\GeoPHP\Geometry;
 
-use Phayes\GeoPHP\Geometry\Collection;
-
 /**
  * MultiLineString: A collection of LineStrings
  */

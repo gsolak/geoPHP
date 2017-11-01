@@ -2,8 +2,6 @@
 
 namespace Phayes\GeoPHP\Geometry;
 
-use Phayes\GeoPHP\Geometry\Collection;
-
 /**
  * MultiPolygon: A collection of Polygons
  */

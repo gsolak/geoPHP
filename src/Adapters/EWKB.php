@@ -2,27 +2,14 @@
 
 namespace Phayes\GeoPHP\Adapters;
 
-use Phayes\GeoPHP\GeoPHP;
-use Phayes\GeoPHP\Adapters\GeoAdapter;
-use Phayes\GeoPHP\Adapters\WKB;
-use Phayes\GeoPHP\Geometry\Point;
-use Phayes\GeoPHP\Geometry\Polygon;
-use Phayes\GeoPHP\Geometry\LineString;
-use Phayes\GeoPHP\Geometry\MultiPoint;
-use Phayes\GeoPHP\Geometry\MultiPolygon;
-use Phayes\GeoPHP\Geometry\MultiLineString;
 use Phayes\GeoPHP\Geometry\Geometry;
-use Phayes\GeoPHP\Geometry\GeometryCollection;
-use Exception;
 
 class EWKB extends WKB
 {
 
   /**
    * Read WKB binary string into geometry objects
-   *
    * @param string $wkb An Extended-WKB binary string
-   *
    * @return Geometry
    */
    public function read($wkb, $is_hex_string = false)
@@ -36,11 +23,9 @@ class EWKB extends WKB
      fwrite($mem, $wkb);
      fseek($mem, 0);
      $base_info = unpack("corder/ctype/cz/cm/cs", fread($mem, 5));
+     $srid = null;
      if ($base_info['s']) {
        $srid = current(unpack("Lsrid", fread($mem, 4)));
-     }
-     else {
-       $srid = NULL;
      }
      fclose($mem);
 
@@ -52,7 +37,6 @@ class EWKB extends WKB
      if ($srid) {
        $geom->setSRID($srid);
      }
-
      return $geom;
    }
 
@@ -102,8 +86,7 @@ class EWKB extends WKB
      if ($write_as_hex) {
        $unpacked = unpack('H*',$wkb);
        return $unpacked[1];
-     } else {
-       return $wkb;
      }
+     return $wkb;
    }
 }
