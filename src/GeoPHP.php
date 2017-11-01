@@ -2,17 +2,8 @@
 
 namespace Phayes\GeoPHP;
 
-use Phayes\GeoPHP\Adapters\GeoAdapter;
-use Phayes\GeoPHP\Adapters\WKT;
-use Phayes\GeoPHP\Adapters\GeoJSON;
 use Phayes\GeoPHP\Geometry\Geometry;
 use Phayes\GeoPHP\Geometry\GeometryCollection;
-use Phayes\GeoPHP\Geometry\Point;
-use Phayes\GeoPHP\Geometry\Polygon;
-use Phayes\GeoPHP\Geometry\LineString;
-use Phayes\GeoPHP\Geometry\MultiPoint;
-use Phayes\GeoPHP\Geometry\MultiPolygon;
-use Phayes\GeoPHP\Geometry\MultiLineString;
 
 class GeoPHP
 {

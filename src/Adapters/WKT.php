@@ -2,25 +2,22 @@
 
 namespace Phayes\GeoPHP\Adapters;
 
-use Phayes\GeoPHP\GeoPHP;
-use Phayes\GeoPHP\Adapters\GeoAdapter;
-use Phayes\GeoPHP\Geometry\Point;
-use Phayes\GeoPHP\Geometry\Polygon;
-use Phayes\GeoPHP\Geometry\LineString;
-use Phayes\GeoPHP\Geometry\MultiPoint;
-use Phayes\GeoPHP\Geometry\MultiPolygon;
-use Phayes\GeoPHP\Geometry\MultiLineString;
 use Phayes\GeoPHP\Geometry\Geometry;
 use Phayes\GeoPHP\Geometry\GeometryCollection;
+use Phayes\GeoPHP\Geometry\LineString;
+use Phayes\GeoPHP\Geometry\MultiLineString;
+use Phayes\GeoPHP\Geometry\MultiPoint;
+use Phayes\GeoPHP\Geometry\MultiPolygon;
+use Phayes\GeoPHP\Geometry\Point;
+use Phayes\GeoPHP\Geometry\Polygon;
+use Phayes\GeoPHP\GeoPHP;
 
 class WKT extends GeoAdapter
 {
 
   /**
    * Read WKT string into geometry objects
-   *
-   * @param string $WKT A WKT string
-   *
+   * @param string $wkt - WKT string
    * @return Geometry
    */
   public function read($wkt)
@@ -73,124 +70,100 @@ class WKT extends GeoAdapter
   private function parsePoint($data_string)
   {
     $data_string = $this->trimParens($data_string);
-
     // If it's marked as empty, then return an empty point
-    if ($data_string == 'EMPTY') {
+    if ($data_string === 'EMPTY') {
       return new Point();
     }
-
     $parts = explode(' ',$data_string);
-
     return new Point($parts[0], $parts[1]);
   }
 
   private function parseLineString($data_string)
   {
     $data_string = $this->trimParens($data_string);
-
     // If it's marked as empty, then return an empty line
     if ($data_string == 'EMPTY') {
       return new LineString();
     }
-
     $parts = explode(',',$data_string);
     $points = [];
-
     foreach ($parts as $part) {
       $points[] = $this->parsePoint($part);
     }
-
     return new LineString($points);
   }
 
   private function parsePolygon($data_string)
   {
     $data_string = $this->trimParens($data_string);
-
     // If it's marked as empty, then return an empty polygon
     if ($data_string == 'EMPTY') {
       return new Polygon();
     }
-
     $parts = explode('),(',$data_string);
     $lines = [];
-
     foreach ($parts as $part) {
       if (!$this->beginsWith($part,'(')) $part = '(' . $part;
       if (!$this->endsWith($part,')'))   $part = $part . ')';
       $lines[] = $this->parseLineString($part);
     }
-
     return new Polygon($lines);
   }
 
   private function parseMultiPoint($data_string)
   {
     $data_string = $this->trimParens($data_string);
-
     // If it's marked as empty, then return an empty MutiPoint
     if ($data_string == 'EMPTY') {
       return new MultiPoint();
     }
-
     $parts = explode(',',$data_string);
     $points = array();
-
     foreach ($parts as $part) {
       $points[] = $this->parsePoint($part);
     }
-
     return new MultiPoint($points);
   }
 
   private function parseMultiLineString($data_string)
   {
     $data_string = $this->trimParens($data_string);
-
     // If it's marked as empty, then return an empty multi-linestring
     if ($data_string == 'EMPTY') {
       return new MultiLineString();
     }
-
     $parts = explode('),(',$data_string);
     $lines = [];
-
     foreach ($parts as $part) {
       // Repair the string if the explode broke it
       if (!$this->beginsWith($part,'(')) $part = '(' . $part;
       if (!$this->endsWith($part,')'))   $part = $part . ')';
       $lines[] = $this->parseLineString($part);
     }
-
     return new MultiLineString($lines);
   }
 
   private function parseMultiPolygon($data_string)
   {
     $data_string = $this->trimParens($data_string);
-
     // If it's marked as empty, then return an empty multi-polygon
     if ($data_string == 'EMPTY') {
       return new MultiPolygon();
     }
-
     $parts = explode(')),((',$data_string);
     $polys = [];
-
     foreach ($parts as $part) {
       // Repair the string if the explode broke it
       if (!$this->beginsWith($part,'((')) $part = '((' . $part;
       if (!$this->endsWith($part,'))'))   $part = $part . '))';
       $polys[] = $this->parsePolygon($part);
     }
-
     return new MultiPolygon($polys);
   }
 
   private function parseGeometryCollection($data_string)
   {
     $data_string = $this->trimParens($data_string);
-
     // If it's marked as empty, then return an empty geom-collection
     if ($data_string == 'EMPTY') {
       return new GeometryCollection();
@@ -199,11 +172,9 @@ class WKT extends GeoAdapter
     $matches = [];
     $str = preg_replace('/,\s*([A-Za-z])/', '|$1', $data_string);
     $components = explode('|', trim($str));
-
     foreach ($components as $component) {
       $geometries[] = $this->read($component);
     }
-
     return new GeometryCollection($geometries);
   }
 
@@ -212,11 +183,11 @@ class WKT extends GeoAdapter
     $first_paren = strpos($wkt, '(');
     if ($first_paren !== false) {
       return substr($wkt, $first_paren);
-    } elseif (strstr($wkt,'EMPTY')) {
-      return 'EMPTY';
-    } else {
-      return false;
     }
+    if (strstr($wkt,'EMPTY')) {
+      return 'EMPTY';
+    }
+    return false;
   }
 
   /**
@@ -229,7 +200,7 @@ class WKT extends GeoAdapter
     if ($this->beginsWith($str, '(')) {
       return substr($str,1,-1);
     }
-    else return $str;
+    return $str;
   }
 
   protected function beginsWith($str, $char)
@@ -244,9 +215,7 @@ class WKT extends GeoAdapter
 
   /**
    * Serialize geometries into a WKT string.
-   *
    * @param Geometry $geometry
-   *
    * @return string The WKT string representation of the input geometries
    */
   public function write(Geometry $geometry)
@@ -258,28 +227,24 @@ class WKT extends GeoAdapter
       $writer->setTrim(true);
       return $writer->write($geometry->geos());
     }
-
     if ($geometry->isEmpty()) {
       return strtoupper($geometry->geometryType()).' EMPTY';
     }
-
-    else if ($data = $this->extractData($geometry)) {
+    if ($data = $this->extractData($geometry)) {
       return strtoupper($geometry->geometryType()).' ('.$data.')';
     }
+    return null;
   }
 
 
   /**
    * Extract geometry to a WKT string
-   *
    * @param Geometry $geometry A Geometry object
-   *
    * @return string
    */
   public function extractData($geometry)
   {
     $parts = [];
-
     switch ($geometry->geometryType())
     {
       case 'Point':
@@ -303,5 +268,6 @@ class WKT extends GeoAdapter
         }
         return implode(', ', $parts);
     }
+    return null;
   }
 }

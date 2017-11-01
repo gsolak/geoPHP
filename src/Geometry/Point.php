@@ -2,8 +2,6 @@
 
 namespace Phayes\GeoPHP\Geometry;
 
-use Phayes\GeoPHP\GeoPHP;
-use Phayes\GeoPHP\Geometry\Geometry;
 use Exception;
 
 class Point extends Geometry
@@ -15,10 +13,10 @@ class Point extends Geometry
 
   /**
    * Constructor
-   *
-   * @param numeric $x The x coordinate (or longitude)
-   * @param numeric $y The y coordinate (or latitude)
-   * @param numeric $z The z coordinate (or altitude) - optional
+   * @param float $x The x coordinate (or longitude)
+   * @param float $y The y coordinate (or latitude)
+   * @param float $z The z coordinate (or altitude) - optional
+   * @throws \Exception
    */
   public function __construct($x = null, $y = null, $z = null)
   {

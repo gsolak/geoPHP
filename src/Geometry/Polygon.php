@@ -3,9 +3,6 @@
 namespace Phayes\GeoPHP\Geometry;
 
 use Phayes\GeoPHP\GeoPHP;
-use Phayes\GeoPHP\Geometry\Point;
-use Phayes\GeoPHP\Geometry\LineString;
-use Phayes\GeoPHP\Geometry\Collection;
 
 class Polygon extends Collection
 {

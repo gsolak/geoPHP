@@ -2,10 +2,8 @@
 
 namespace Phayes\GeoPHP\Geometry;
 
-use Phayes\GeoPHP\GeoPHP;
-use Phayes\GeoPHP\Geometry\Geometry;
-use Phayes\GeoPHP\Geometry\LineString;
 use Exception;
+use Phayes\GeoPHP\GeoPHP;
 
 abstract class Collection extends Geometry
 {
@@ -13,8 +11,8 @@ abstract class Collection extends Geometry
 
   /**
    * Constructor: Checks and sets component geometries
-   *
    * @param array $components array of geometries
+   * @throws \Exception
    */
   public function __construct($components = []) {
 
@@ -33,7 +31,6 @@ abstract class Collection extends Geometry
 
   /**
    * Returns Collection component geometries
-   *
    * @return array
    */
   public function getComponents() {
@@ -53,9 +50,9 @@ abstract class Collection extends Geometry
   public function invertxy()
   {
 	  for($i=0;$i<count($this->components);$i++) {
-		  if( method_exists($this->components[$i], 'invertxy' )) {
-			  $this->components[$i]->invertxy();
-      }
+        if( method_exists($this->components[$i], 'invertxy' )) {
+          $this->components[$i]->invertxy();
+        }
 	  }
   }
 
@@ -67,7 +64,7 @@ abstract class Collection extends Geometry
         return GeoPHP::geosToGeometry($this->geos()->centroid());
       }
     }
-    // As a rough estimate, we say that the centroid of a colletion is the centroid of it's envelope
+    // As a rough estimate, we say that the centroid of a collection is the centroid of it's envelope
     // @@TODO: Make this the centroid of the convexHull
     // Note: Outside of polygons, geometryCollections and the trivial case of points, there is no standard on what a "centroid" is
     $centroid = $this->envelope()->centroid();
@@ -108,7 +105,6 @@ abstract class Collection extends Geometry
       $miny = $component_bbox['miny'] < $miny ? $component_bbox['miny'] : $miny;
       $i++;
     }
-
     return [
       'maxy' => $maxy,
       'miny' => $miny,

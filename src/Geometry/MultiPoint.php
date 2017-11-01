@@ -2,8 +2,6 @@
 
 namespace Phayes\GeoPHP\Geometry;
 
-use Phayes\GeoPHP\Geometry\Collection;
-
 /**
  * MultiPoint: A collection Points
  */
