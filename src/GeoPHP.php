@@ -4,6 +4,7 @@ namespace Phayes\GeoPHP;
 
 use Phayes\GeoPHP\Geometry\Geometry;
 use Phayes\GeoPHP\Geometry\GeometryCollection;
+use Phayes\GeoPHP\Geometry\MultiPolygon;
 
 class GeoPHP
 {
@@ -206,6 +207,10 @@ class GeoPHP
         return $geometries[0];
       } else {
         $class = 'Multi'.$geom_types[0];
+        // todo - investgiate why MultiPolygon() is not loaded automatically?
+        if ($class === 'MultiPolygon') {
+            return new MultiPolygon($geometries);
+        }
         return new $class($geometries);
       }
 
